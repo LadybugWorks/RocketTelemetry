@@ -1,0 +1,156 @@
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+//
+// Defs
+//
+
+#define UART0_PATH "/dev/ttyO0"
+#define UART1_PATH "/dev/ttyO1"
+#define UART2_PATH "/dev/ttyO2"
+#define UART3_PATH "/dev/ttyO3"
+#define UART4_PATH "/dev/ttyO4"
+#define UART5_PATH "/dev/ttyO5"
+
+#define PACKET_MAX_DATA_LEN 16
+#define PACKET_POOL_SIZE 16
+
+#define PACKET_ID_NULL      0x00
+#define PACKET_ID_HEARTBEAT 0x01
+#define PACKET_ID_COMMAND   0x02
+#define PACKET_ID_DATA      0x03
+
+#define PACKET_CMD_NULL     0x00
+#define PACKET_CMD_STARTCAM 0x01
+#define PACKET_CMD_STOPCAM  0x02
+
+#define TELEM_STATE_UNKNOWN 0
+#define TELEM_STATE_SETUP   1
+#define TELEM_STATE_PAD     2
+#define TELEM_STATE_FLIGHT  4
+#define TELEM_STATE_END     5
+
+//
+// Types
+//
+
+typedef struct packet_t
+{
+    struct packet_t *next;
+    uint8_t id;
+    uint8_t length;
+    uint8_t data[PACKET_MAX_DATA_LEN];
+} packet_t;
+
+typedef struct packet_pool_t
+{
+    packet_t pool[PACKET_POOL_SIZE];
+    packet_t *free_head;
+    pthread_mutext_t mutex;
+} packet_pool_t;
+
+typedef struct uart_t
+{
+    pthread_mutex_t mutex;
+    FILE *stream;
+} uart_t;
+
+//
+// Data
+//
+
+static int telem_state = TELEM_STATE_UNKNOWN; 
+static uart_t camera;
+static uart_t radio;
+
+static packet_pool_t packets;
+
+static sem_t inbound_packets_sem;
+static int inbound_packets_count = 0;
+static packet_t *inbound_packets[PACKET_POOL_SIZE];
+
+//
+// Uart
+//
+
+//
+// Packet Procs
+//
+
+packet_t *packet_alloc()
+{
+    packet_t *packet = packets.free_head;
+    packets.free_head = packets.free_head->next;
+    packet->next = NULL;
+}
+
+void packet_free(packet_t *packet)
+{
+    packet->next = packets.free_head;
+    packets.free_head = packet;
+}
+
+void inbound_add(packet_t *packet)
+{
+    inbound_packets[inbound_packets_count++] = packet;
+}
+
+void inbound_remove(packet_t *packet)
+{
+    int index;
+    for (index = 0; 
+         index < inbound_packets_count && 
+         inbound_packets[index] != packet; 
+         index++);
+    
+    inbound_packets[index] = inbound_packets[inbound_packets_count--];
+}
+
+int inbound_packets_handler(void *arg)
+{
+    while (1)
+    {
+        // block until we see a packet come in
+        sem_wait(&inbound_packets_sem);
+        
+        packet_t *packet = 0; // @todo
+        
+        switch (packet->id)
+        {
+            case PACKET_ID_NULL:
+            printf("PACKET\tInbound null packet.\n");
+            break;
+            
+            case PACKET_ID_HEARTBEAT:
+            printf("PACKET\tInbound heartbeat packet.\n");
+            break;
+            
+            case PACKET_ID_COMMAND:
+            printf("PACKET\tInbound command packet.\n");
+            break;
+            
+            case PACKET_ID_DATA:
+            printf("PACKET\tInbound data packet.\n");
+            break;
+            
+            default:
+            printf("ERROR\tUnknown packet id: %0x.2X.\n", packet->id);
+        }
+        
+        free_packet(packet);
+    }
+}
+
+//
+// Entry Point
+//
+
+int main(int argc, const char **argv)
+{
+    
+    
+    return 0;
+}
