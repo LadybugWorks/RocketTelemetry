@@ -47,36 +47,36 @@ void radio_init(radio_t *radio)
     pthread_mutex_init(&radio->mutex, NULL);
 }
 
-void radio_open(radio_t *radio, const char *dev)
+int radio_open(radio_t *radio, const char *device)
 {
-    radio->stream = fopen(dev, "w+");
+    return serial_open(&radio->serial, device, SERIAL_BAUDRATE_57600);
 }
 
 void radio_close(radio_t *radio)
 {
-    fclose(radio->stream);
+    serial_close(&radio->serial);
 }
 
-void radio_send(radio_t *radio, const void *data, size_t size)
+ssize_t radio_send(radio_t *radio, const void *data, size_t size)
 {
     pthread_mutex_lock(&radio->mutex);
-    fwrite(data, 1, size, radio->stream); 
+    ssize_t res = serial_write(data, size, &radio->serial);
     pthread_mutex_unlock(&radio->mutex);
 }
 
-size_t radio_recv(radio_t *radio, void *buffer, size_t size)
+ssize_t radio_recv(radio_t *radio, void *buffer, size_t size)
 {
     pthread_mutex_lock(&radio->mutex);
-    size_t res = fread(buffer, 1, size, radio->stream); 
+    ssize_t res = serial_read(buffer, size, &radio->serial);
     pthread_mutex_unlock(&radio->mutex);
-    return res;
+    retur res;
 }
 
 void radio_flush(radio_t *radio)
 {
-    pthread_mutex_lock(&radio->mutex);
-    fflush(radio->stream);
-    pthread_mutex_unlock(&radio->mutex);
+    // @todo
+    fprintf(stderr, "ERROR\tradio_flush(..) is not implemented\n");
+    //serial_flush(&radio->serial)
 }
 
 int radio_begin_cfg(radio_t *radio)

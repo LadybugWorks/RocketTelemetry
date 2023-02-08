@@ -5,21 +5,21 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <stddef.h>
+#include <sys/types.h>
 #include <pthread.h>
 
 typedef struct radio_t
 {
     pthread_mutex_t mutex;
-    FILE *stream;
+    serial_t serial;
 } radio_t;
 
 // operation procs
 void radio_init(radio_t *radio);
-void radio_open(radio_t *radio, const char *dev);
+int radio_open(radio_t *radio, const char *device);
 void radio_close(radio_t *radio);
-void radio_send(radio_t *radio, const void *data, size_t size);
-size_t radio_recv(radio_t *radio, void *buffer, size_t size);
+ssize_t radio_send(radio_t *radio, const void *data, size_t size);
+ssize_t radio_recv(radio_t *radio, void *buffer, size_t size);
 void radio_flush(radio_t *radio);
 // config procs
 int radio_begin_cfg(radio_t *radio);
