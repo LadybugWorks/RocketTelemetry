@@ -21,6 +21,7 @@ int main(int argc, const char **argv)
     
     printf("Testing serial port \"%s\"\n", device);
     printf("Inputs should be echoed back.\n");
+    printf("An input of Z will close the program.\n");
     
     serial_t serial;
     if (serial_open(&serial, device, SERIAL_BAUDRATE_115200) == -1)

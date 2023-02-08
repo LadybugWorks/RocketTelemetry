@@ -1,6 +1,8 @@
 #include "radio.h"
 #include <unistd.h>
 
+#define AT_ENTER_MODE_STR "+++"
+
 #define AT_CMD_GET_VERSION "ATI"
 #define AT_CMD_GET_BOARD_TYPE "ATI2"
 #define AT_CMD_GET_BOARD_FREQ "ATI3"
@@ -15,11 +17,11 @@
 #define AT_CMD_WRITE_CONFIG "AT&W"
 #define AT_CMD_RESET_CONFIG "AT&F"
 
-#define REG_ID_NETID   3
-#define REG_ID_TXPOWER 4
-#define REG_ID_MINFREQ 8
-#define REG_ID_MAXFREQ 9
-#define REG_ID_NODEID  15
+#define AT_REG_NETID   3
+#define AT_REG_TXPOWER 4
+#define AT_REG_MINFREQ 8
+#define AT_REG_MAXFREQ 9
+#define AT_REG_NODEID  15
 
 /*
 ATI Shows the radio version
@@ -39,7 +41,6 @@ AT&T=RSSI Enables RSSI debugging report AT&T=TDM Enables TDM debugging report
 AT&T Disables debugging report
 */
 
-#define ENTER_AT_COMMAND_MODE_STR "+++"
 
 void radio_init(radio_t *radio)
 {
@@ -81,7 +82,7 @@ void radio_flush(radio_t *radio)
 int radio_begin_cfg(radio_t *radio)
 {
     pthread_mutex_lock(&radio->mutex);
-    fprintf(radio->stream, ENTER_AT_COMMAND_MODE_STR);
+    fprintf(radio->stream, AT_ENTER_MODE_STR);
     sleep(2); // the doc says we should see "OK" after a second
     // @todo wait for OK with timeout
     return 1;
@@ -96,27 +97,27 @@ void radio_end_cfg(radio_t *radio)
 // @todo sanity check for values
 void radio_set_netid(radio_t *radio, uint32_t netid)
 {
-    radio_setreg(radio, REG_ID_NETID, netid);
+    radio_setreg(radio, AT_REG_NETID, netid);
 }
 
 void radio_set_txpower(radio_t *radio, uint32_t power)
 {
-    radio_setreg(radio, REG_ID_TXPOWER, power);
+    radio_setreg(radio, AT_REG_TXPOWER, power);
 }
 
 void radio_set_minfreq(radio_t *radio, uint32_t freq)
 {
-    radio_setreg(radio, REG_ID_MINFREQ, freq);
+    radio_setreg(radio, AT_REG_MINFREQ, freq);
 }
 
 void radio_set_maxfreq(radio_t *radio, uint32_t freq)
 {
-    radio_setreg(radio, REG_ID_MAXFREQ, freq);
+    radio_setreg(radio, AT_REG_MAXFREQ, freq);
 }
 
 void radio_set_nodeid(radio_t *radio, uint32_t nodeid)
 {
-    radio_setreg(radio, REG_ID_NODEID, nodeid);
+    radio_setreg(radio, AT_REG_NODEID, nodeid);
 }
 
 // command procs
