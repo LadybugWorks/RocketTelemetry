@@ -11,6 +11,7 @@ patterns = {
   "*.sh",
   "*.4coder",
   "*.txt",
+  "makefile"
 };
 
 blacklist_patterns = {
