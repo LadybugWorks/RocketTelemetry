@@ -3,11 +3,9 @@
 # Config
 #
 
-# Note that if TOOLCHAIN_PREFIX and SDCARD are already defined
-# we will not redefine them. 
-TOOLCHAIN_PREFIX != arm-linux-gnueabihf-
-SDCARD != /Volumes/SDCARD
-CC := ${TOOLCHAIN_PREFIX}gcc
+TOOLCHAIN_PREFIX = arm-linux-gnueabihf-
+SDCARD = /Volumes/SDCARD
+CC = ${TOOLCHAIN_PREFIX}gcc
 CCFLAGS = -static
 SRCS = ./src/camera.c ./src/packet.c ./src/serial.c ./src/radio.c
 
