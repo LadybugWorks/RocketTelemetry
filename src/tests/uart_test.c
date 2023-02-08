@@ -4,10 +4,12 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "../serial.h"
+
 int main(int argc, const char **argv)
 {
     printf("UART Test\n");
-    
+#if 0
     struct termios tty;
     int fd;
     int flags = O_RDWR | O_NOCTTY | O_NONBLOCK;
@@ -39,6 +41,21 @@ int main(int argc, const char **argv)
         write(fd, "HELLO", 4);
         sleep(1);
     }
+#else
     
+    
+    serial_t uart1;
+    if (serial_open(&uart1, "/dev/ttyS1", SERIAL_BAUDRATE_115200) == -1)
+    {
+        fprintf(stderr, "ERROR\tFailed to open serial port.\n");
+        return -1;
+    }
+    
+    for (int i = 0; i < 16; i++)
+        serial_write("TESLA\n", 6, &uart1);
+    
+    serial_close(&uart1);
+    
+#endif
     return 0;
 }
