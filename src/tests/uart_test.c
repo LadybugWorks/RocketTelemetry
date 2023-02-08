@@ -1,61 +1,47 @@
-#include <stdio.h>
-#include <termios.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include "../serial.h"
+#include <stdio.h>
+#include <stdint.h>
+
+// This file tests the serial api.
+// It'll write "Clemson" to the port,
+// then it'll echo any inputs.
+//
+// Warning!
+// Make sure your UART pins are enabled.
+// On the beaglebone black you can run
+// $ config-pin p9.<pin number> uart
+// Or put it in the device tree
+//
+// Usage:
+//     uart_test [device]
 
 int main(int argc, const char **argv)
 {
-    printf("UART Test\n");
-#if 0
-    struct termios tty;
-    int fd;
-    int flags = O_RDWR | O_NOCTTY | O_NONBLOCK;
+    const char *device = (argc >= 2) ? argv[1] : "/dev/ttyS1";
     
-    fd = open("/dev/ttyS1", flags);
-    if (fd == -1)
+    printf("Testing serial port \"%s\"\n", device);
+    printf("Inputs should be echoed back.\n");
+    
+    serial_t serial;
+    if (serial_open(&serial, device, SERIAL_BAUDRATE_115200) == -1)
     {
-        fprintf(stderr, "failed to open port\n");
+        fprintf(stderr, "ERROR\tFailed to open \"%s\".\n", device);
         return -1;
     }
     
-    tcgetattr(fd, &tty);
-    tty.c_cflag = B115200 | CS8 | CLOCAL | CREAD;
-    tty.c_iflag = IGNPAR | ICRNL | IGNCR;
-    tty.c_oflag = 0;
-    tty.c_lflag = 0;
-    tty.c_cc[VTIME] = 0;
-    tty.c_cc[VMIN] = 0;
+    serial_write("Clemson\n", 8, &serial);
     
-    if (tcsetattr(fd, TCSANOW, &tty) != 0)
+    uint8_t input;
+    while (input != 'Z')
     {
-        fprintf(stderr, "error %d from tcsetattr\n", errno);
-        return -1;
+        if (serial_read(&input, 1, &serial) == 1)
+        {
+            putc((char)input, stdout);
+            serial_write(&input, 1, &serial); // Echo
+        }
     }
     
-    for (;;)
-    {
-        printf("wrote hello.\n");
-        write(fd, "HELLO", 4);
-        sleep(1);
-    }
-#else
+    serial_close(&serial);
     
-    
-    serial_t uart1;
-    if (serial_open(&uart1, "/dev/ttyS1", SERIAL_BAUDRATE_115200) == -1)
-    {
-        fprintf(stderr, "ERROR\tFailed to open serial port.\n");
-        return -1;
-    }
-    
-    for (int i = 0; i < 16; i++)
-        serial_write("TESLA\n", 6, &uart1);
-    
-    serial_close(&uart1);
-    
-#endif
     return 0;
 }
